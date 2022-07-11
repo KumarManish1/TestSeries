@@ -1,0 +1,141 @@
+import React ,{useState,useEffect} from 'react';
+import Axios from 'axios';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+
+import { makeStyles } from '@material-ui/core/styles';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import ListItemText from '@material-ui/core/ListItemText';
+
+import AppBar from '@material-ui/core/AppBar';
+import Card from '@material-ui/core/Card';
+import Grid from '@material-ui/core/Grid';
+import CardContent from '@material-ui/core/CardContent';
+import CardActions from '@material-ui/core/CardActions';
+import Toolbar from '@material-ui/core/Toolbar';
+
+import Typography from '@material-ui/core/Typography';
+//import CloseIcon from '@material-ui/icons/Close';
+import Slide from '@material-ui/core/Slide';
+
+
+const useStyles = makeStyles((theme) => ({
+  appBar: {
+    position: 'relative',
+  },
+  title: {
+    marginLeft: theme.spacing(4),
+    flex: 1,
+  },
+
+  
+}));
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+export default function TakeTest(props) {
+  const classes = useStyles();
+  const [question,setquestion] = useState([]);
+  const [visible,setVisible]=useState(1);
+  const [hide,sethide]=useState(0);
+  const {open, setOpen}= props;
+  const [ans,setAns]=useState("");
+
+  function allquestion(){
+    Axios.post('http://localhost:3001/api/question',{Q_ID:sessionStorage.getItem('Q__ID')})
+    .then((response)=>{
+      setquestion(response.data);
+    })
+  }
+  const loadNext=()=>{
+    if(visible<question.length){
+    sethide(hide+1)
+    setVisible(visible+1);
+   // setAns("");
+  }
+  }
+  const loadPrev=()=>{
+    if((hide>1)||(visible>1)){
+    sethide(hide-1)
+    setVisible(visible-1);
+   // setAns("");
+  }
+  }
+  // useEffect(()=>{
+  //   allquestion();
+
+  //   console.log(question)
+  // },[])
+
+  function SubmitTest()
+  {
+    Axios.post('http://localhost:3001/api/setQuizResult',{U_ID:sessionStorage.getItem('UserID'),Q_ID:sessionStorage.getItem('Q__ID')})
+    .then((response)=>{
+      alert('Sucess')
+    })
+  }
+  function StartQuiz()
+  {
+    allquestion();
+  }
+  const handleChange=(e)=>{
+    setAns(e.target.value);
+    
+  }
+  return (
+    
+      <Dialog fullScreen open={open}  TransitionComponent={Transition}>
+        <AppBar className={classes.appBar}>
+            <ListItemText style={{textAlign:"center",paddingTop:"10px",fontSize:'32px'}} primary={<Typography variant="h5" >Maulana Azad National Institute of Technology, BHOPAL-462003</Typography> }
+            secondary={<Typography variant="h6" style={{color:"#343a40"}}>(An Institute of National Importance)</Typography>} />
+            <Toolbar>
+                <Typography variant="h6" className={classes.title}>
+                Student Id
+                </Typography>
+                <Typography variant="h6" style={{textAlign:"center"}}>
+                {props.name}
+                </Typography>
+                <Typography variant="h6" className={classes.title}>
+                Timer
+                </Typography>
+          </Toolbar>
+          <Button onClick={StartQuiz}>Click here to Start Quiz</Button>
+        </AppBar>
+        <Card  variant="outlined" style={{alignSelf:"center",marginTop:"50px",width:"auto"}}>
+          {
+          question.slice(hide,visible).map((obj)=>(
+                  
+            <CardContent key={obj.Qu_ID}>
+                <h4 style={{marginTop:"20px"}}>QNo.{obj.Question} </h4><hr/>
+                <Grid container >     
+                    <RadioGroup  name={'Option'+obj.Qu_ID}  row key={'Option'+obj.Qu_ID} >
+                        <Grid item xs={12} md={6} sm={6}>
+                            <FormControlLabel id={'Option1_'+obj.Qu_ID} key={'Option1_'+obj.Qu_ID} value="Option1"control={<Radio  color="primary"/>}label={obj.O1} />
+                        </Grid>
+                        <Grid item xs={12} md={6} sm={6}>
+                            <FormControlLabel id={'Option2_'+obj.Qu_ID} key={'Option2_'+obj.Qu_ID} value="Option2" control={<Radio color="primary"/>} label={obj.O2} />
+                        </Grid>
+                        <Grid item xs={12} md={6} sm={6}>
+                            <FormControlLabel id={'Option3_'+obj.Qu_ID} key={'Option3_'+obj.Qu_ID} value="Option3" control={<Radio color="primary"/>} label={obj.O3} />
+                        </Grid>
+                        <Grid item  xs={12} md={6} sm={6}>
+                            <FormControlLabel id={'Option4_'+obj.Qu_ID} key={'Option4_'+obj.Qu_ID} value="option4" control={<Radio color="primary"/>} label={obj.O4} />
+                        </Grid>
+                    </RadioGroup>
+                </Grid>
+            </CardContent>
+             ))}<hr/>
+            <CardActions>
+                <Button size="medium" onClick={loadPrev}>Previous</Button>
+                <Button size="small" onClick={loadNext}>Next</Button>
+            </CardActions>
+            <Button onClick={SubmitTest}>final Submit</Button>
+        </Card>
+    </Dialog>
+    
+  );
+}
